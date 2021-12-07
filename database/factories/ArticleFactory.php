@@ -17,7 +17,7 @@ class ArticleFactory extends Factory
         return [
             'SKU' => Str::random(8),
             'title' => $this->faker->sentence,
-            'content' => $this->faker->sentence,
+            'content' => $this->faker->paragraph(),
             'user_id' => random_int(1, 10),
             'cover' => $this->faker->imageUrl(),
             'like' => random_int(1, 5)
