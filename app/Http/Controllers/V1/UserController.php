@@ -37,7 +37,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $email = new EmailValidator($request->email);
+        
         $request->validate([
             'name' => 'required|string|max:50|alpha',
             'last_name' => 'required|string|max:50|alpha',
@@ -54,9 +54,6 @@ class UserController extends Controller
             ]
         );
 
-        // Validator::make($message = [
-        //     'valid' => 'x'
-        // ]);
         $user->save();
         return response()->json([
             'status_code' => 201,
