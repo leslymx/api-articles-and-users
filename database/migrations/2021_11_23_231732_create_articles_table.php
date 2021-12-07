@@ -18,10 +18,10 @@ class CreateArticlesTable extends Migration
             $table->string('SKU')->unique();
             $table->string('title');
             $table->string('content');
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->string('cover')->nullable();
-            $table->integer('like');
             $table->unsignedBigInteger('user_id');
+            $table->string('cover')->nullable();
+            $table->integer('like')->default(0);
+            $table->foreign('user_id')->references('id')->on('users');
             $table->timestamps();
         });
     }
