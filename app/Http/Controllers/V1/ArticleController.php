@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\V1\ArticleLikeRequest;
 use App\Http\Resources\V1\ArticleResource;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Response;
+
 
 class ArticleController extends Controller
 {
