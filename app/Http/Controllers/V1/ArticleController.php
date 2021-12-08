@@ -82,9 +82,23 @@ class ArticleController extends Controller
      * @param  \App\Models\Article  $article
      * @return \Illuminate\Http\Response
      */
-    public function show(Article $article)
+    public function show(Article $article, Request $request)
     {
-        return new ArticleResource($article);
+        $article = Article::where('user_id', $request->user()->id)->get();
+        if ($article) {
+
+            return response()->json([
+                'status code' => 200,
+                'message' => 'Successfull',
+                'item information' => new ArticleResource($article)
+            ], 200);
+        }
+
+        return response()->json([
+            'status code' => 404,
+            'message' => 'The item you are looking for does not belong to this user',
+            'item information' => '[{}]'
+        ], 404);
     }
 
     /**
