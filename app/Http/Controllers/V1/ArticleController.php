@@ -7,9 +7,7 @@ use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-use App\Http\Requests\V1\ArticleLikeRequest;
 use App\Http\Resources\V1\ArticleResource;
-
 
 class ArticleController extends Controller
 {
@@ -26,7 +24,9 @@ class ArticleController extends Controller
                 [
                     'data' => [
                         'status code ' => 200,
-                        'articles information' => $articles
+                        'dev' => 'OK',
+                        'message' => 'List of Items Obtained Successfully',
+                        'items information' => $articles
                     ]
                 ],
                 200
@@ -36,8 +36,9 @@ class ArticleController extends Controller
         return response()->json([
             'data' => [
                 'status code' => 404,
-                'message' => 'Articles not found',
-                'article informacion' => '[{}]'
+                'dev' => 'NOT FOUND',
+                'message' => 'Items not found',
+                'items information' => '[{}]'
             ]
         ], 404);
     }
@@ -70,8 +71,9 @@ class ArticleController extends Controller
         return response()->json([
             'data' => [
                 'status code' => 201,
+                'dev' => 'CREATED',
                 'message' => 'Successful article created',
-                'article new information' => $article
+                'new item information' => $article
             ],
         ], 201);
     }
@@ -89,16 +91,18 @@ class ArticleController extends Controller
 
             return response()->json([
                 'status code' => 200,
-                'message' => 'Successfull',
+                'dev' => 'OK',
+                'message' => 'Item found successfully',
                 'item information' => new ArticleResource($article)
             ], 200);
         }
 
         return response()->json([
-            'status code' => 404,
+            'status code' => 400,
+            'dev' => 'BAD REQUEST',
             'message' => 'The item you are looking for does not belong to this user',
-            'item information' => '[{}]'
-        ], 404);
+            'item information' => '[{ }]'
+        ], 400);
     }
 
     /**
@@ -108,7 +112,7 @@ class ArticleController extends Controller
      * @param  \App\Models\Article  $article
      * @return \Illuminate\Http\Response
      */
-    public function update(ArticleLikeRequest $request, Article $article)
+    public function update(Request $request, Article $article)
     {
         $article->where('id', $article->id)
             ->update(

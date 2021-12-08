@@ -25,7 +25,9 @@ class UserController extends Controller
     {
         return response()->json([
             'status code' => 200,
-            'users information' => $this->user->paginate(5)
+            'dev' => 'OK',
+            'message' => 'Successfully obtained users',
+            'user information' => $this->user->paginate(5)
         ], 200);
     }
 
@@ -57,7 +59,9 @@ class UserController extends Controller
         $user->save();
         return response()->json([
             'status_code' => 201,
+            'dev' => 'CREATED',
             'token' => $request->user()->createToken($request->email)->plainTextToken,
+            'message' => 'User created successfully',
             'user information' => $user
         ], 201);
     }
