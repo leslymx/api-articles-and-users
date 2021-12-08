@@ -85,7 +85,7 @@ class ArticleController extends Controller
     public function show(Article $article, Request $request)
     {
         $user = $request->user()->id;
-        if ($article === $user) {
+        if ($article->user_id === $user) {
 
             return response()->json([
                 'status code' => 200,
