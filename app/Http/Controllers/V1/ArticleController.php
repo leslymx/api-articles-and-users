@@ -84,8 +84,8 @@ class ArticleController extends Controller
      */
     public function show(Article $article, Request $request)
     {
-        $article = Article::where('user_id', $request->user()->id)->get();
-        if ($article) {
+        $user = $request->user()->id;
+        if ($article === $user) {
 
             return response()->json([
                 'status code' => 200,
