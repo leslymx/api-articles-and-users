@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 use App\Http\Resources\V1\ArticleResource;
-use Illuminate\Validation\ValidationException;
+
 
 class ArticleController extends Controller
 {
@@ -17,14 +17,14 @@ class ArticleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request, ValidationException $e)
+    public function index(Request $request)
     {
         $articles = Article::where('user_id', $request->user()->id)->get();
         if ($articles) {
             return response()->json(
                 [
                     'data' => [
-                        'status code ' => 200,
+                        'statusCode ' => 200,
                         'dev' => 'OK',
                         'message' => 'List of Items Obtained Successfully',
                         'items information' => $articles
@@ -36,12 +36,12 @@ class ArticleController extends Controller
 
         return response()->json([
             'data' => [
-                'status code' => $e->status,
-                'errors' => $e->errors(),
-                'message' => $e->getMessage(),
+                'statusCode' => 404,
+                'dev' => 'NOT FOUND',
+                'message' => 'Items not found',
                 'items information' => '[{}]'
             ]
-        ], $e->status);
+        ], 404);
     }
 
     /**
@@ -50,7 +50,7 @@ class ArticleController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request,)
     {
         $request->validate([
             'title' => 'required|string',
@@ -67,11 +67,11 @@ class ArticleController extends Controller
                 'user_id' => $request->user()->id
             ]
         );
-
         $article->save();
+
         return response()->json([
             'data' => [
-                'status code' => 201,
+                'statusCode' => 201,
                 'dev' => 'CREATED',
                 'message' => 'Successful article created',
                 'new item information' => $article
@@ -91,7 +91,7 @@ class ArticleController extends Controller
         if ($article->user_id === $user) {
 
             return response()->json([
-                'status code' => 200,
+                'statusCode' => 200,
                 'dev' => 'OK',
                 'message' => 'Item found successfully',
                 'item information' => new ArticleResource($article)
@@ -99,7 +99,7 @@ class ArticleController extends Controller
         }
 
         return response()->json([
-            'status code' => 400,
+            'statusCode' => 400,
             'dev' => 'BAD REQUEST',
             'message' => 'The item you are looking for does not belong to this user',
             'item information' => '[{ }]'
@@ -115,16 +115,6 @@ class ArticleController extends Controller
      */
     public function update(Request $request, Article $article)
     {
-        $article->where('id', $article->id)
-            ->update(
-                [
-                    "like" => $request->input('like'),
-                ]
-            );
-
-        $article->save();
-
-        return response()->json($article, 200);
     }
 
     /**
@@ -133,12 +123,24 @@ class ArticleController extends Controller
      * @param  \App\Models\Article  $article
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Article $article)
+    public function destroy(Article $article, Request $request)
     {
-        $article->delete();
+        $user = $request->user()->id;
+
+        if ($article->user_id === $user) {
+            $article->delete();
+            return response()->json([
+                'statusCode' => 200,
+                'dev' => 'OK',
+                'message' => 'Item removed successfully'
+            ], 200);
+        }
 
         return response()->json([
-            'message' => 'Articulo eliminado.'
-        ]);
+            'statusCode' => 400,
+            'dev' => 'BAD REQUEST',
+            'message' => 'The item you are looking for does not belong to this user',
+            'item information' => '[{}]'
+        ], 400);
     }
 }
