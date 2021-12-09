@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\ArticleRequest;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -39,7 +40,7 @@ class ArticleController extends Controller
                 'statusCode' => 404,
                 'dev' => 'NOT FOUND',
                 'message' => 'Items not found',
-                'items information' => '[{}]'
+                'items information' => '{}'
             ]
         ], 404);
     }
@@ -50,14 +51,8 @@ class ArticleController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request,)
+    public function store(ArticleRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'content' => 'required|string',
-            'cover' => 'url',
-        ]);
-
         $article = Article::create(
             [
                 'SKU' =>  Str::random(8),
@@ -74,7 +69,7 @@ class ArticleController extends Controller
                 'statusCode' => 201,
                 'dev' => 'CREATED',
                 'message' => 'Successful article created',
-                'new item information' => $article
+                'new item information' => new ArticleResource($article)
             ],
         ], 201);
     }
@@ -87,8 +82,8 @@ class ArticleController extends Controller
      */
     public function show(Article $article, Request $request)
     {
-        $user = $request->user()->id;
-        if ($article->user_id === $user) {
+        $userId = $request->user()->id;
+        if ($article->user_id === $userId) {
 
             return response()->json([
                 'statusCode' => 200,
@@ -115,6 +110,33 @@ class ArticleController extends Controller
      */
     public function update(Request $request, Article $article)
     {
+        /**
+         * increments the like field by one each time you send the request
+         */
+        $userId = $request->user()->id; // get id from token
+
+        if ($userId === $article->user_id) {
+
+            $article->like = $this->increaseLike($article->like);
+            $article->save();
+
+            return response()->json(
+                [
+                    'statusCode' => 200,
+                    'dev' => 'OK',
+                    'message' => 'Like increased by 1',
+                    'item information' => new ArticleResource($article)
+                ],
+                200
+            );
+        }
+
+        return response()->json([
+            'statusCode' => 400,
+            'dev' => 'BAD REQUEST',
+            'message' => 'The article you want to modify does not belong to this user',
+            'item information' => '{}'
+        ], 400);
     }
 
     /**
@@ -125,9 +147,9 @@ class ArticleController extends Controller
      */
     public function destroy(Article $article, Request $request)
     {
-        $user = $request->user()->id;
+        $userId = $request->user()->id;
 
-        if ($article->user_id === $user) {
+        if ($article->user_id === $userId) {
             $article->delete();
             return response()->json([
                 'statusCode' => 200,
@@ -142,5 +164,10 @@ class ArticleController extends Controller
             'message' => 'The item you are looking for does not belong to this user',
             'item information' => '[{}]'
         ], 400);
+    }
+
+    protected function increaseLike($article)
+    {
+        return $article + 1;
     }
 }
