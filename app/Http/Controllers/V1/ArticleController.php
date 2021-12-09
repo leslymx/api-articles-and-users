@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 use App\Http\Resources\V1\ArticleResource;
+use Illuminate\Validation\ValidationException;
 
 class ArticleController extends Controller
 {
@@ -16,7 +17,7 @@ class ArticleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(Request $request, ValidationException $e)
     {
         $articles = Article::where('user_id', $request->user()->id)->get();
         if ($articles) {
@@ -35,12 +36,12 @@ class ArticleController extends Controller
 
         return response()->json([
             'data' => [
-                'status code' => 404,
-                'dev' => 'NOT FOUND',
-                'message' => 'Items not found',
+                'status code' => $e->status,
+                'errors' => $e->errors(),
+                'message' => $e->getMessage(),
                 'items information' => '[{}]'
             ]
-        ], 404);
+        ], $e->status);
     }
 
     /**
