@@ -4,24 +4,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\LoginRequest;
+use App\Http\Resources\V1\LoginResource;
 use Illuminate\Support\Facades\Auth;
-
 
 class LoginController extends Controller
 {
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $this->validateLogin($request);
-
         if (Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'token' => $request->user()->createToken($request->email)->plainTextToken,
                 'data' => [
-                    'status code' => 200,
-                    'message' => 'Success',
-                    'user information' => [
-                        $request->user()
-                    ]
+                    'statusCode' => 200,
+                    'dev' => 'OK',
+                    'message' => 'Successful login',
+                    'user information' => new LoginResource($request->user())
                 ],
             ], 200);
         }
@@ -31,16 +29,8 @@ class LoginController extends Controller
             'data' => [
                 'status code' => 400,
                 'message' => 'Bad request',
-                'user info' => "{}",
+                'user information' => "{}",
             ]
         ], 400);
-    }
-
-    public function validateLogin(Request $request)
-    {
-        return $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
     }
 }
