@@ -59,7 +59,8 @@ class ArticleController extends Controller
                 'title' => $request->title,
                 'content' => $request->content,
                 'cover' => $request->cover,
-                'user_id' => $request->user()->id
+                'user_id' => $request->user()->id,
+                'like' => 0
             ]
         );
         $article->save();
