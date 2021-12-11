@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\ArticleRequest;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 use App\Http\Resources\V1\ArticleResource;
+
 
 class ArticleController extends Controller
 {
@@ -23,7 +25,7 @@ class ArticleController extends Controller
             return response()->json(
                 [
                     'data' => [
-                        'status code ' => 200,
+                        'statusCode ' => 200,
                         'dev' => 'OK',
                         'message' => 'List of Items Obtained Successfully',
                         'items information' => $articles
@@ -35,10 +37,10 @@ class ArticleController extends Controller
 
         return response()->json([
             'data' => [
-                'status code' => 404,
+                'statusCode' => 404,
                 'dev' => 'NOT FOUND',
                 'message' => 'Items not found',
-                'items information' => '[{}]'
+                'items information' => '{}'
             ]
         ], 404);
     }
@@ -49,14 +51,8 @@ class ArticleController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ArticleRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'content' => 'required|string',
-            'cover' => 'url',
-        ]);
-
         $article = Article::create(
             [
                 'SKU' =>  Str::random(8),
@@ -66,14 +62,14 @@ class ArticleController extends Controller
                 'user_id' => $request->user()->id
             ]
         );
-
         $article->save();
+
         return response()->json([
             'data' => [
-                'status code' => 201,
+                'statusCode' => 201,
                 'dev' => 'CREATED',
                 'message' => 'Successful article created',
-                'new item information' => $article
+                'new item information' => new ArticleResource($article)
             ],
         ], 201);
     }
@@ -86,11 +82,11 @@ class ArticleController extends Controller
      */
     public function show(Article $article, Request $request)
     {
-        $user = $request->user()->id;
-        if ($article->user_id === $user) {
+        $userId = $request->user()->id;
+        if ($article->user_id === $userId) {
 
             return response()->json([
-                'status code' => 200,
+                'statusCode' => 200,
                 'dev' => 'OK',
                 'message' => 'Item found successfully',
                 'item information' => new ArticleResource($article)
@@ -98,7 +94,7 @@ class ArticleController extends Controller
         }
 
         return response()->json([
-            'status code' => 400,
+            'statusCode' => 400,
             'dev' => 'BAD REQUEST',
             'message' => 'The item you are looking for does not belong to this user',
             'item information' => '[{ }]'
@@ -114,16 +110,33 @@ class ArticleController extends Controller
      */
     public function update(Request $request, Article $article)
     {
-        $article->where('id', $article->id)
-            ->update(
+        /**
+         * increments the like field by one each time you send the request
+         */
+        $userId = $request->user()->id; // get id from token
+
+        if ($userId === $article->user_id) {
+
+            $article->like = $this->increaseLike($article->like);
+            $article->save();
+
+            return response()->json(
                 [
-                    "like" => $request->input('like'),
-                ]
+                    'statusCode' => 200,
+                    'dev' => 'OK',
+                    'message' => 'Like increased by 1',
+                    'item information' => new ArticleResource($article)
+                ],
+                200
             );
+        }
 
-        $article->save();
-
-        return response()->json($article, 200);
+        return response()->json([
+            'statusCode' => 400,
+            'dev' => 'BAD REQUEST',
+            'message' => 'The article you want to modify does not belong to this user',
+            'item information' => '{}'
+        ], 400);
     }
 
     /**
@@ -132,12 +145,29 @@ class ArticleController extends Controller
      * @param  \App\Models\Article  $article
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Article $article)
+    public function destroy(Article $article, Request $request)
     {
-        $article->delete();
+        $userId = $request->user()->id;
+
+        if ($article->user_id === $userId) {
+            $article->delete();
+            return response()->json([
+                'statusCode' => 200,
+                'dev' => 'OK',
+                'message' => 'Item removed successfully'
+            ], 200);
+        }
 
         return response()->json([
-            'message' => 'Articulo eliminado.'
-        ]);
+            'statusCode' => 400,
+            'dev' => 'BAD REQUEST',
+            'message' => 'The item you are looking for does not belong to this user',
+            'item information' => '[{}]'
+        ], 400);
+    }
+
+    protected function increaseLike($article)
+    {
+        return $article + 1;
     }
 }
